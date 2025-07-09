@@ -1,3 +1,9 @@
-# prediction-of-diseases
-#in this i created a model which can predict the possibility of heart disease, Parkinson's and  diabetes
-i used stremlit for interface in this project
+This project is a Streamlit web application that predicts the likelihood of three major diseases using Machine Learning:
+
+🫀 Heart Disease
+
+🧠 Parkinson's Disease
+
+💉 Diabetes
+
+Built using Python, Scikit-learn, StandardScaler, and Streamlit, this app allows users to enter medical data and get instant predictions.
