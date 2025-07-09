@@ -1,190 +1,130 @@
-
 import streamlit as st
-from streamlit_option_menu import option_menu
 import pickle
 import numpy as np
 
-# Load pre-trained models
-diabetes_model = pickle.load(open("D:\disease prediction\diabetes.sav", "rb"))
-heart_disease_model = pickle.load(open("D:\disease prediction\heart.sav","rb"))
-parkinsons_model = pickle.load(open("D:\disease prediction\parkinson.sav", "rb"))
+# Load models and scalers
+diabetes_model = pickle.load(open('D:\\disease prediction\\new one\\diabetes_model.pk1', 'rb'))
+diabetes_scaler = pickle.load(open("D:\disease prediction\\new one\scaler_of_diabetes.pk1", 'rb'))
 
-with st.sidebar:
-  
-    selected = option_menu(
-    'PREDICTION OF DISEASE OUTBREAK SYSTEM',
-    ['Diabetes Prediction', 'Heart Disease Prediction', 'Parkinsons Prediction'],
-    icons=['droplet', 'heart', 'person'],
-    default_index=0)
+heart_model = pickle.load(open("D:\disease prediction\\new one\heart_model.pk1", 'rb'))
+heart_scaler = pickle.load(open('D:\\disease prediction\\new one\\scaler_of_heart_model.sav', 'rb'))
 
-if selected=='Diabetes Prediction':
-    st.title('Diabetes Prediction using Machine Learning')
-    col1,col2,col3,col4=st.columns(4)
-    with col1:
-        pregnancies=st.text_input('Number of pregnancies')
-    with col2:
-        Glucose=st.text_input('Glucose Level')
-    with col3:
-        Bloodpressure=st.text_input('Blood pressure value')
-    with col4:
-        SkinThickness=st.text_input('Skin Thickness value')
-    with col1:
-        Insulin=st.text_input('Insulin Level')
-    with col2:
-        BMI=st.text_input('BMI value')
-    with col3:
-        DiabetesPedigreeFunction=st.text_input('Diabetes pedigree Function value')
-    with col4:
-        Age=st.text_input('Age of the person')
+parkinsons_model = pickle.load(open("D:\\disease prediction\\new one\\parkinson_model.pk1", 'rb'))
+parkinsons_scaler = pickle.load(open('D:\\disease prediction\\new one\\scaler_of_parkinsons.pkl', 'rb'))
 
-    diab_diagnosis=''
-    if st.button('Diabetes Test Result'):
-         user_input=[pregnancies,Glucose,Bloodpressure,SkinThickness,Insulin,BMI,DiabetesPedigreeFunction,Age]
-         user_input=[float(i) for i in user_input]
-         diab_prediction=diabetes_model.predict([user_input])
-         if diab_prediction[0]==1:
-            diab_diagnosis='The person is diabetic'
-         else:
-            diab_diagnosis='The person is not diabetic'
-    st.success(diab_diagnosis)        
+# App UI
+st.set_page_config(page_title="Disease Prediction App", layout="centered")
+st.title("ML-Based Disease Prediction System")
+st.write("Choose a disease from the sidebar and enter the required health data to get a prediction.")
 
+# Sidebar Navigation
+selected_disease = st.sidebar.selectbox("Choose Disease", ["Diabetes", "Heart Disease", "Parkinson's"])
 
-if selected=='Heart Disease Prediction':
-    st.title('Heart Disease Prediction using Machine Learninng')
-    col1,col2,col3,col4=st.columns(4)
-    with col1:
-        age=st.text_input('Enter the patient age')
-    with col2:
-        sex=st.text_input('Gender for M-1 & F-0') 
-    with col3:
-        cp=st.text_input('Constrictive Pericarditis(Cp)')
-    with col4:
-        trestbps=st.text_input('Trestbps value')
-    with col1:
-        chol=st.text_input('Cholesterol Value')
-    with col2:
-        fbs=st.text_input('fbs value')
-    with col3:
-        restecg=st.text_input('restecg value')
-    with col4:
-        thalach=st.text_input('thalach Value')
-    with col1:
-        exang=st.text_input('exang Value')
-    with col2:
-        oldpeak=st.text_input('oldpeak value')
-    with col2:
-        slope=st.text_input('slope Value')
-    with col3:
-        ca=st.text_input('ca value')
-    with col4:
-        thal=st.text_input('thal value')
-        
+# Prediction Functions
+def predict_diabetes(input_data):
+    input_array = np.asarray(input_data).reshape(1, -1)
+    scaled = diabetes_scaler.transform(input_array)
+    prediction = diabetes_model.predict(scaled)
+    return 'Diabetic' if prediction[0] == 1 else 'Not Diabetic'
 
-    heaart_diagnosis=''
-    if st.button('Heart Test Result'):
-         user_input=['age','sex','cp','trestbps','chol','fbs','restecg','thalach','exang','oldpeak','slope','ca','thal']
-         user_input=[float(i) for i in user_input]
-         diab_prediction=diabetes_model.predict([user_input])
-         if diab_prediction[0]==1:
-            diab_diagnosis='The person is diabetic'
-         else:
-            diab_diagnosis='The person is not diabetic'
-    st.success(heaart_diagnosis)        
-    
-# Parkinson's Prediction Page
-if selected == "Parkinsons Prediction":
+def predict_heart(input_data):
+    input_array = np.asarray(input_data).reshape(1, -1)
+    scaled = heart_scaler.transform(input_array)
+    prediction = heart_model.predict(scaled)
+    return 'Heart Disease Detected' if prediction[0] == 1 else 'No Heart Disease'
 
-    # page title
-    st.title("Parkinson's Disease Prediction using ML")
+def predict_parkinsons(input_data):
+    input_array = np.asarray(input_data).reshape(1, -1)
+    scaled = parkinsons_scaler.transform(input_array)
+    prediction = parkinsons_model.predict(scaled)
+    return "Parkinson's Detected" if prediction[0] == 1 else "No Parkinson's"
 
-    col1, col2, col3, col4, col5 = st.columns(5)
+# Diabetes Form (BRFSS)
+if selected_disease == "Diabetes":
+    st.subheader("Diabetes Prediction")
+    HighBP = st.selectbox('High Blood Pressure (1=Yes, 0=No)', [1, 0])
+    HighChol = st.selectbox('High Cholesterol (1=Yes, 0=No)', [1, 0])
+    CholCheck = st.selectbox('Cholesterol Check in last 5 years (1=Yes, 0=No)', [1, 0])
+    BMI = st.number_input('BMI', min_value=0.0)
+    Smoker = st.selectbox('Smoked 100+ cigarettes (1=Yes, 0=No)', [1, 0])
+    Stroke = st.selectbox('Ever had a stroke (1=Yes, 0=No)', [1, 0])
+    HeartDiseaseorAttack = st.selectbox('Heart Disease or Heart Attack (1=Yes, 0=No)', [1, 0])
+    PhysActivity = st.selectbox('Physical Activity in past 30 days (1=Yes, 0=No)', [1, 0])
+    Fruits = st.selectbox('Consumes Fruit 1+ times/day (1=Yes, 0=No)', [1, 0])
+    AnyHealthcare = st.selectbox('Any healthcare coverage (1=Yes, 0=No)', [1, 0])
+    NoDocbcCost = st.selectbox('Could not see doctor due to cost (1=Yes, 0=No)', [1, 0])
+    GenHlth = st.selectbox('General Health (1=Excellent to 5=Poor)', [1, 2, 3, 4, 5])
+    MentHlth = st.number_input('Mental Health - bad days (last 30 days)', min_value=0)
+    PhysHlth = st.number_input('Physical Health - bad days (last 30 days)', min_value=0)
+    DiffWalk = st.selectbox('Difficulty Walking (1=Yes, 0=No)', [1, 0])
+    Sex = st.selectbox('Sex (1=Male, 0=Female)', [1, 0])
+    Age = st.selectbox('Age Category (1 to 13)', list(range(1, 14)))
+    Education = st.selectbox('Education Level (1 to 6)', list(range(1, 7)))
+    Income = st.selectbox('Income Category (1 to 8)', list(range(1, 9)))
 
-    with col1:
-        fo = st.text_input('MDVP:Fo(Hz)')
+    if st.button('Predict'):
+        input_data = [HighBP, HighChol, CholCheck, BMI, Smoker, Stroke, HeartDiseaseorAttack,
+                      PhysActivity, Fruits, AnyHealthcare, NoDocbcCost, GenHlth, MentHlth,
+                      PhysHlth, DiffWalk, Sex, Age, Education, Income]
+        result = predict_diabetes(input_data)
+        st.success(result)
 
-    with col2:
-        fhi = st.text_input('MDVP:Fhi(Hz)')
+# Heart Disease Form
+elif selected_disease == "Heart Disease":
+    st.subheader("Heart Disease Prediction")
+    male = st.selectbox('Sex (1 = Male, 0 = Female)', [1, 0])
+    age = st.number_input('Age', min_value=0)
+    education = st.selectbox('Education Level (1 to 4)', [1, 2, 3, 4])
+    currentSmoker = st.selectbox('Current Smoker (1 = Yes, 0 = No)', [1, 0])
+    cigsPerDay = st.number_input('Cigarettes per Day', min_value=0)
+    BPMeds = st.selectbox('On BP Medication (1 = Yes, 0 = No)', [1, 0])
+    prevalentStroke = st.selectbox('Had a Stroke Before (1 = Yes, 0 = No)', [1, 0])
+    prevalentHyp = st.selectbox('History of Hypertension (1 = Yes, 0 = No)', [1, 0])
+    diabetes = st.selectbox('Diabetic (1 = Yes, 0 = No)', [1, 0])
+    totChol = st.number_input('Total Cholesterol', min_value=0.0)
+    sysBP = st.number_input('Systolic BP', min_value=0.0)
+    diaBP = st.number_input('Diastolic BP', min_value=0.0)
+    BMI = st.number_input('BMI', min_value=0.0)
+    heartRate = st.number_input('Heart Rate', min_value=0.0)
+    glucose = st.number_input('Glucose', min_value=0.0)
 
-    with col3:
-        flo = st.text_input('MDVP:Flo(Hz)')
+    if st.button('Predict'):
+        input_data = [male, age, education, currentSmoker, cigsPerDay, BPMeds,
+                      prevalentStroke, prevalentHyp, diabetes, totChol,
+                      sysBP, diaBP, BMI, heartRate, glucose]
+        result = predict_heart(input_data)
+        st.success(result)
 
-    with col4:
-        Jitter_percent = st.text_input('MDVP:Jitter(%)')
+# Parkinson's Form
+elif selected_disease == "Parkinson's":
+    st.subheader("Parkinson's Disease Prediction")
+    fo = st.number_input('MDVP:Fo(Hz)')
+    fhi = st.number_input('MDVP:Fhi(Hz)')
+    flo = st.number_input('MDVP:Flo(Hz)')
+    jitter_percent = st.number_input('MDVP:Jitter(%)')
+    jitter_abs = st.number_input('MDVP:Jitter(Abs)')
+    rap = st.number_input('MDVP:RAP')
+    ppq = st.number_input('MDVP:PPQ')
+    ddp = st.number_input('Jitter:DDP')
+    shimmer = st.number_input('MDVP:Shimmer')
+    shimmer_db = st.number_input('MDVP:Shimmer(dB)')
+    apq3 = st.number_input('Shimmer:APQ3')
+    apq5 = st.number_input('Shimmer:APQ5')
+    apq = st.number_input('MDVP:APQ')
+    dda = st.number_input('Shimmer:DDA')
+    nhr = st.number_input('NHR')
+    hnr = st.number_input('HNR')
+    rpde = st.number_input('RPDE')
+    dfa = st.number_input('DFA')
+    spread1 = st.number_input('Spread1')
+    spread2 = st.number_input('Spread2')
+    d2 = st.number_input('D2')
+    ppe = st.number_input('PPE')
 
-    with col5:
-        Jitter_Abs = st.text_input('MDVP:Jitter(Abs)')
-
-    with col1:
-        RAP = st.text_input('MDVP:RAP')
-
-    with col2:
-        PPQ = st.text_input('MDVP:PPQ')
-
-    with col3:
-        DDP = st.text_input('Jitter:DDP')
-
-    with col4:
-        Shimmer = st.text_input('MDVP:Shimmer')
-
-    with col5:
-        Shimmer_dB = st.text_input('MDVP:Shimmer(dB)')
-
-    with col1:
-        APQ3 = st.text_input('Shimmer:APQ3')
-
-    with col2:
-        APQ5 = st.text_input('Shimmer:APQ5')
-
-    with col3:
-        APQ = st.text_input('MDVP:APQ')
-
-    with col4:
-        DDA = st.text_input('Shimmer:DDA')
-
-    with col5:
-        NHR = st.text_input('NHR')
-
-    with col1:
-        HNR = st.text_input('HNR')
-
-    with col2:
-        RPDE = st.text_input('RPDE')
-
-    with col3:
-        DFA = st.text_input('DFA')
-
-    with col4:
-        spread1 = st.text_input('spread1')
-
-    with col5:
-        spread2 = st.text_input('spread2')
-
-    with col1:
-        D2 = st.text_input('D2')
-
-    with col2:
-        PPE = st.text_input('PPE')
-
-    # code for Prediction
-    parkinsons_diagnosis = ''
-
-    # creating a button for Prediction    
-    if st.button("Parkinson's Test Result"):
-
-        user_input = [fo, fhi, flo, Jitter_percent, Jitter_Abs,
-                      RAP, PPQ, DDP,Shimmer, Shimmer_dB, APQ3, APQ5,
-                      APQ, DDA, NHR, HNR, RPDE, DFA, spread1, spread2, D2, PPE]
-
-        user_input = [float(x) for x in user_input]
-
-        parkinsons_prediction = parkinsons_model.predict([user_input])
-
-        if parkinsons_prediction[0] == 1:
-            parkinsons_diagnosis = "The person has Parkinson's disease"
-        else:
-            parkinsons_diagnosis = "The person does not have Parkinson's disease"
-
-    st.success(parkinsons_diagnosis)
-
-       
+    if st.button('Predict'):
+        input_data = [fo, fhi, flo, jitter_percent, jitter_abs, rap, ppq, ddp,
+                      shimmer, shimmer_db, apq3, apq5, apq, dda, nhr, hnr,
+                      rpde, dfa, spread1, spread2, d2, ppe]
+        result = predict_parkinsons(input_data)
+        st.success(result)
 
